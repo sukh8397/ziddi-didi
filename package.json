@@ -1,0 +1,11 @@
+{
+  "name": "ziddi-didi-server",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --env-file=.env server.js",
+    "test": "node test/unit.test.js"
+  }
+}
