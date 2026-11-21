@@ -493,10 +493,58 @@ const WIDGET_JS = `/* Ziddi Didi: AI shopkeeper widget for Shopify themes. */
 })();`;
 
 // Automated Shopify Theme Installer
-async function installToShopify(token, store, themeId) {
+async function installToShopify(inputToken, store, themeId) {
   const storeHost = (store || "kxfyrk-qd.myshopify.com").replace(/^https?:\/\//, "").replace(/\/.*$/, "");
   const tid = themeId || "201863757984";
   const apiVer = "2024-10";
+  let token = inputToken;
+
+  // If token is missing or an organization atkn, attempt token exchange
+  const tokenLogs = [];
+  if (!token || token.startsWith("atkn_")) {
+    const clientId = "44e3d9dc82d268d8a233210ad728c405";
+    const clientSecret = "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";
+
+    // Try client_credentials
+    try {
+      const exRes = await fetch(`https://${storeHost}/admin/oauth/access_token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, grant_type: "client_credentials" })
+      });
+      const exData = await exRes.json();
+      tokenLogs.push({ method: "client_credentials", status: exRes.status, data: exData });
+      if (exData && exData.access_token) {
+        token = exData.access_token;
+      }
+    } catch (e) {
+      tokenLogs.push({ method: "client_credentials", error: e.message });
+    }
+
+    // If still no token, try token-exchange
+    if (!token || token.startsWith("atkn_")) {
+      try {
+        const teRes = await fetch(`https://${storeHost}/admin/oauth/access_token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret,
+            grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
+            requested_token_type: "urn:shopify:params:oauth:token-type:offline-access-token"
+          })
+        });
+        const teData = await teRes.json();
+        tokenLogs.push({ method: "token_exchange", status: teRes.status, data: teData });
+        if (teData && teData.access_token) {
+          token = teData.access_token;
+        }
+      } catch (e) {
+        tokenLogs.push({ method: "token_exchange", error: e.message });
+      }
+    }
+  }
+
   const headers = {
     "Content-Type": "application/json",
     "X-Shopify-Access-Token": token,
@@ -547,7 +595,7 @@ async function installToShopify(token, store, themeId) {
     results.push({ file: "layout/theme.liquid", status: getTheme.status, ok: false, body: errText.slice(0, 120) });
   }
 
-  return { ok: results.every(r => r.ok), store: storeHost, themeId: tid, results };
+  return { ok: results.every(r => r.ok), store: storeHost, themeId: tid, tokenLogs, results };
 }
 
 // ---------- HTTP Server ----------
