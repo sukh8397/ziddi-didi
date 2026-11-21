@@ -362,7 +362,14 @@ const LIQUID_SNIPPET = `{%- comment -%}
 const WIDGET_JS = `/* Ziddi Didi: AI shopkeeper widget for Shopify themes. */
 (function () {
   var C = window.ZIDDI_DIDI || {};
-  if (!C.api || window.__zd) return;
+  C.api = C.api || "https://ziddi-didi.onrender.com";
+  C.whatsapp = C.whatsapp || "919888458818";
+  C.lang = C.lang || "en-IN";
+  if (!C.product && typeof window !== "undefined" && window.location) {
+    var pMatch = window.location.pathname.match(/\/products\/([^\\/?#]+)/);
+    if (pMatch) C.product = pMatch[1];
+  }
+  if (window.__zd) return;
   window.__zd = 1;
   var WA = C.whatsapp || "919888458818", KEY = "zd_hist", SEEN = "zd_seen";
   var API = C.api.replace(/\\/$/, "") + "/api/didi/chat";
@@ -630,6 +637,16 @@ http.createServer(async (req, res) => {
       mode: CFG.geminiKey ? "gemini" : (CFG.anthropicKey ? "anthropic" : "demo_search"),
       status: "ready"
     });
+  }
+
+  // Self-hosted 1-Line Widget CDN
+  if (req.method === "GET" && (req.url === "/widget.js" || req.url === "/ziddi-didi.js")) {
+    res.writeHead(200, {
+      "content-type": "application/javascript; charset=utf-8",
+      "access-control-allow-origin": "*",
+      "cache-control": "public, max-age=60"
+    });
+    return res.end(WIDGET_JS);
   }
 
   // 1-Click Automated Theme Installer endpoint
