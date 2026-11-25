@@ -366,7 +366,7 @@ const WIDGET_JS = `/* Ziddi Didi: AI shopkeeper widget for Shopify themes. */
   C.whatsapp = C.whatsapp || "919888458818";
   C.lang = C.lang || "en-IN";
   if (!C.product && typeof window !== "undefined" && window.location) {
-    var pMatch = window.location.pathname.match(/\/products\/([^\\/?#]+)/);
+    var pMatch = window.location.pathname.match(/\\/products\\/([^\\/?#]+)/);
     if (pMatch) C.product = pMatch[1];
   }
   if (window.__zd) return;
