@@ -1,0 +1,21 @@
+{% comment %}
+  Ziddi Didi: AI shopkeeper widget for ziddiladki.com.
+
+  Install:
+  1. Upload theme/ziddi-didi.js as an Asset named ziddi-didi.js (Assets > Add a new asset).
+  2. Save this file as Snippets/ziddi-didi.liquid.
+  3. In layout/theme.liquid, add {% render 'ziddi-didi' %} right before </body>.
+
+  The backend URL below is the live Ziddi Didi server (health check: /health).
+  Change it only if you redeploy the backend to a new host.
+{% endcomment %}
+<script>
+  window.ZIDDI_DIDI = window.ZIDDI_DIDI || {};
+  window.ZIDDI_DIDI.api = window.ZIDDI_DIDI.api || "https://ziddi-didi.onrender.com";
+  window.ZIDDI_DIDI.whatsapp = "919888458818";
+  window.ZIDDI_DIDI.lang = "en-IN";
+  {% if template contains "product" and product %}
+  window.ZIDDI_DIDI.product = {{ product.handle | json }};
+  {% endif %}
+</script>
+{{ 'ziddi-didi.js' | asset_url | script_tag }}
